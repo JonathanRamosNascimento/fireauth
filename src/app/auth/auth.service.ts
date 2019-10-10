@@ -59,7 +59,22 @@ export class AuthService {
     return from(this.afAuth.auth.signInWithPopup(provider))
       .pipe(
         tap((data) => console.log(data)),
-        map(() => null)
+        switchMap((u: auth.UserCredential) => {
+          const newUser: User = {
+            firstname: u.user.displayName,
+            lastname: '',
+            address: '',
+            city: '',
+            state: '',
+            phone: '',
+            mobilephone: '',
+            email: u.user.email,
+            password: '',
+            id: u.user.uid
+          };
+          return this.userCollection.doc(u.user.uid)
+            .set(newUser).then(() => newUser);
+        })
       );
   }
 }
