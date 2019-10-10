@@ -1,5 +1,9 @@
+import { User } from './../user';
+import { AuthService } from './../auth.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatSnackBar } from '@angular/material';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -16,14 +20,42 @@ export class LoginComponent implements OnInit {
   loading: boolean = false;
 
   constructor(
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private snackBar: MatSnackBar,
+    private router: Router
   ) { }
 
   ngOnInit() {
   }
 
-  onSubmit() {
+  private loginOkNotification(u: User) {
+    this.snackBar.open(
+      'Logged in successfully. Welcome ' + u.firstname + '!', 'OK',
+      { duration: 2000 }
+    )
+  }
 
+  private loginErrorNotification(err) {
+    this.snackBar.open(err, 'OK', { duration: 2000 })
+  }
+
+  onSubmit() {
+    this.loading = true;
+    let email = this.loginForm.value.email;
+    let password = this.loginForm.value.password;
+    this.authService.login(email, password)
+      .subscribe(
+        (u) => {
+          this.loginOkNotification(u);
+          this.router.navigateByUrl('/');
+          this.loading = false;
+        },
+        (err) => {
+          this.loginErrorNotification(err);
+          this.loading = false;
+        }
+      );
   }
 
   loginGoogle() {

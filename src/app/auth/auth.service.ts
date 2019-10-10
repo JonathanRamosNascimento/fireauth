@@ -1,9 +1,9 @@
-import { Observable, from, throwError } from 'rxjs';
+import { Observable, from, throwError, of } from 'rxjs';
 import { User } from './user';
 import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { switchMap, catchError } from 'rxjs/operators'
+import { switchMap, catchError, map } from 'rxjs/operators'
 
 @Injectable({
   providedIn: 'root'
@@ -31,13 +31,25 @@ export class AuthService {
 
   login(email: string, password: string): Observable<User> {
     return from(this.afAuth.auth.signInWithEmailAndPassword(email, password))
-    .pipe(
-      switchMap((u: firebase.auth.UserCredential) => this.userCollection.doc<User>(u.user.uid).valueChanges),
-      catchError(() => throwError('Invalid credentials or user is not registered.'))
-    )
+      .pipe(
+        switchMap((u: firebase.auth.UserCredential) => this.userCollection.doc<User>(u.user.uid).valueChanges()),
+        catchError(() => throwError('Invalid credentials or user is not registered.'))
+      )
   }
 
   logout() {
     this.afAuth.auth.signOut();
+  }
+
+  getUser(): Observable<User> {
+    return this.afAuth.authState
+      .pipe(
+        switchMap(u => (u) ?
+          this.userCollection.doc<User>(u.uid).valueChanges() : of(null))
+      )
+  }
+
+  authenticated(): Observable<boolean> {
+    return this.afAuth.authState.pipe(map(u => (u) ? true : false))
   }
 }
