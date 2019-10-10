@@ -59,6 +59,7 @@ export class LoginComponent implements OnInit {
   }
 
   loginGoogle() {
-
+    this.authService.loginGoogle()
+      .subscribe();
   }
 }
